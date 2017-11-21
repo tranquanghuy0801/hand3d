@@ -1,9 +1,8 @@
-from utils.FingerCurled import FingerCurled
-from utils.FingerPosition import FingerPosition
+from pose.utils.FingerCurled import FingerCurled
+from pose.utils.FingerPosition import FingerPosition
+from pose.utils.FingerDataFormation import FingerDataFormation
 
-MINIMUM_CONFIDENCE_SCORE = 6.0
-
-def determine_position(curled_positions, finger_positions, known_finger_poses):
+def determine_position(curled_positions, finger_positions, known_finger_poses, min_threshold):
     obtained_positions = {}
     
     for finger_pose in known_finger_poses:
@@ -30,7 +29,7 @@ def determine_position(curled_positions, finger_positions, known_finger_poses):
                     confidence_at = known_position.index(given_position)
                     score_at += known_position_confidence[confidence_at]
         
-        if score_at >= MINIMUM_CONFIDENCE_SCORE:
+        if score_at >= min_threshold:
             obtained_positions[finger_pose.position_name] = score_at
             
     return obtained_positions
@@ -274,4 +273,3 @@ def create_known_finger_poses():
     known_finger_poses.append(victory)
     
     return known_finger_poses
-	

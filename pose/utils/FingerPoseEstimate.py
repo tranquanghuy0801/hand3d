@@ -1,10 +1,13 @@
-from Finger import Finger
-from FingerCurled import FingerCurled
-from FingerPosition import FingerPosition
+import numpy as np
+import math
+
+from pose.utils.Finger import Finger
+from pose.utils.FingerCurled import FingerCurled
+from pose.utils.FingerPosition import FingerPosition
 
 class FingerPoseEstimate:
     def __init__(self, coords_xyz):
-        self.coords_xyz = coords_xyz
+        self.coords_xyz = np.squeeze(coords_xyz)
         self.finger_position = [FingerPosition.VerticalUp, FingerPosition.VerticalUp, 
                                 FingerPosition.VerticalUp, FingerPosition.VerticalUp,
                                 FingerPosition.VerticalUp]
@@ -15,6 +18,9 @@ class FingerPoseEstimate:
 
     def get_slope(self, point1, point2):
         slope_xy = self._calculate_slope_procedure(point1[0], point1[1], point2[0], point2[1])
+        if len(point1) == 2:
+            return slope_xy
+
         slope_yz = self._calculate_slope_procedure(point1[1], point1[2], point2[1], point2[2])
         return slope_xy, slope_yz
 
@@ -32,6 +38,16 @@ class FingerPoseEstimate:
 
             self.slopes_xy.append(slope_at_xy)
             self.slopes_yz.append(slope_at_yz)
+
+    def angle_orientation_at(self, angle, weightage_at = 1.0):
+        is_vertical, is_diagonal, is_horizontal = 0, 0, 0
+        if angle >= 75.0 and angle <= 105.0:
+            is_vertical = 1 * weightage_at
+        elif angle >= 25.0 and angle <= 155.0:
+            is_diagonal = 1 * weightage_at
+        else:
+            is_horizontal = 1 * weightage_at
+        return (is_vertical, is_diagonal, is_horizontal)
 
     def is_finger_curled(self, start_point, mid_point, end_point):
         start_mid_x_dist = start_point[0] - mid_point[0]
@@ -215,12 +231,12 @@ class FingerPoseEstimate:
             point_index_at = 0
             if finger == Finger.Thumb:
                 point_index_at = 1
-            angle_at = self.slopes[finger][point_index_at]
+            angle_at = self.slopes_xy[finger][point_index_at]
             
             finger_points_at = Finger.get_array_of_points(finger)
-            start_point_at = self.coord_hw[finger_points_at[point_index_at][0]]
-            mid_point_at = self.coord_hw[finger_points_at[point_index_at + 1][1]]
-            end_point_at = self.coord_hw[finger_points_at[3][1]]
+            start_point_at = self.coords_xyz[finger_points_at[point_index_at][0]]
+            mid_point_at = self.coords_xyz[finger_points_at[point_index_at + 1][1]]
+            end_point_at = self.coords_xyz[finger_points_at[3][1]]
             
             #print('Points of analysis at {}, {}, {}'.format(start_point_at, mid_point_at, end_point_at))
             #cv2.circle(image2, (int(start_point_at[1]), int(start_point_at[0])), 2, (255, 0, 0), 2)
@@ -230,7 +246,7 @@ class FingerPoseEstimate:
             finger_curled = self.is_finger_curled(start_point_at, mid_point_at, end_point_at)
             #print('Finger: {} = {}'.format(Finger.get_finger_name(finger), FingerCurled.get_finger_curled_name(finger_curled)))
             finger_position = self.calculate_direction_of_finger(start_point_at, mid_point_at, end_point_at,
-                                                                 self.slopes[finger][point_index_at:])
+                                                                 self.slopes_xy[finger][point_index_at:])
             #print('Finger: {} = {}'.format(Finger.get_finger_name(finger),
             #                              FingerPosition.get_finger_position_name(finger_position)))
             

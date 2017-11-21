@@ -1,3 +1,5 @@
+from enum import IntEnum
+
 class FingerCurled(IntEnum):
     NoCurl = 0
     HalfCurl = 1

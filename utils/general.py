@@ -21,6 +21,7 @@ import tensorflow as tf
 from tensorflow.python import pywrap_tensorflow
 import numpy as np
 import math
+import cv2
 
 
 class NetworkOps(object):
@@ -475,6 +476,69 @@ def plot_hand_3d(coords_xyz, axis, color_fixed=None, linewidth='1'):
             axis.plot(coords[:, 0], coords[:, 1], coords[:, 2], color_fixed, linewidth=linewidth)
 
     axis.view_init(azim=-90., elev=90.)
+
+def plot_hand_2d(coords_hw, image, color_fixed=None, linewidth=2):
+    """ Plots a hand stick figure into a matplotlib figure. """
+    colors = [(0, 0, 127),
+            (0, 0, 187),
+            (0, 0, 246),
+            (0, 32, 255),
+            (0, 85, 255),
+            (0, 140, 255),
+            (0, 192, 255),
+            (15, 248, 231),
+            (57, 255, 190),
+            (102, 1, 144),
+            (144, 1, 102),
+            (190, 1, 57),
+            (231, 1, 15),
+            (1, 211, 0),
+            (1, 163, 0),
+            (1, 111, 0),
+            (1, 63, 0),
+            (246, 11, 0),
+            (187, 0, 0),
+            (127, 0, 0)]
+                       
+    # define connections and colors of the bones
+    bones = [((0, 4), colors[0]),
+             ((4, 3), colors[1]),
+             ((3, 2), colors[2]),
+             ((2, 1), colors[3]),
+
+             ((0, 8), colors[4]),
+             ((8, 7), colors[5]),
+             ((7, 6), colors[6]),
+             ((6, 5), colors[7]),
+
+             ((0, 12), colors[8]),
+             ((12, 11), colors[9]),
+             ((11, 10), colors[10]),
+             ((10, 9), colors[11]),
+
+             ((0, 16), colors[12]),
+             ((16, 15), colors[13]),
+             ((15, 14), colors[14]),
+             ((14, 13), colors[15]),
+
+             ((0, 20), colors[16]),
+             ((20, 19), colors[17]),
+             ((19, 18), colors[18]),
+             ((18, 17), colors[19])]
+
+
+    for connection, color in bones:
+        coord1 = coords_hw[connection[0], :]
+        coord2 = coords_hw[connection[1], :]
+        coords = np.stack([coord1, coord2])
+        
+        coord1_t = (int(coord1[1]), int(coord1[0]))
+        coord2_t = (int(coord2[1]), int(coord2[0]))
+        
+        if color_fixed is None:
+            cv2.line(image, coord2_t, coord1_t, color, linewidth)
+        else:
+            cv2.line(image, coord1_t, coord2_t, color_fixed, linewidth)
 
 
 class LearningRateScheduler:
