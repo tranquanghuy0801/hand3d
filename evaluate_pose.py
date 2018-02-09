@@ -16,13 +16,13 @@ from pose.DeterminePositions import create_known_finger_poses, determine_positio
 from pose.utils.FingerPoseEstimate import FingerPoseEstimate
 
 def parse_args():
-	parser = argparse.ArgumentParser(description='Detect objects in the video or still images')
+	parser = argparse.ArgumentParser(description = 'Detect objects in the video or still images')
 	parser.add_argument('data_path', help = 'Path of folder containing images', type = str)
 	parser.add_argument('--output-path', dest = 'output_path', type = str, default = None,
-						help='Path of folder where to store the evaluation result')
+						help = 'Path of folder where to store the evaluation result')
 	parser.add_argument('--plot-fingers', dest = 'plot_fingers', help = 'Should fingers be plotted. (1 = Yes, 0 = No)', 
 						default = 1, type = int)
-	parser.add_argument('--thresh', dest = 'threshold', help = 'Threshold of confidence level(0-1)', default = 0.6,
+	parser.add_argument('--thresh', dest = 'threshold', help = 'Threshold of confidence level(0-1)', default = 0.45,
 	                    type = float)
 	args = parser.parse_args()
 	return args
@@ -42,12 +42,14 @@ def prepare_input(data_path, output_path):
 if __name__ == '__main__':
 	args = parse_args()
 	data_files, output_path = prepare_input(args.data_path, args.output_path)
+	if not os.path.exists(output_path):
+		os.mkdir(output_path)
 	known_finger_poses = create_known_finger_poses()
 
 	# network input
-	image_tf = tf.placeholder(tf.float32, shape=(1, 240, 320, 3))
+	image_tf = tf.placeholder(tf.float32, shape = (1, 240, 320, 3))
 	hand_side_tf = tf.constant([[1.0, 1.0]])  # Both left and right hands included
-	evaluation = tf.placeholder_with_default(True, shape=())
+	evaluation = tf.placeholder_with_default(True, shape = ())
 
 	# build network
 	net = ColorHandPose3DNetwork()
@@ -63,7 +65,7 @@ if __name__ == '__main__':
 
 	# Feed image list through network
 	for img_name in data_files:
-		image_raw = scipy.misc.imread(img_name)
+		image_raw = scipy.misc.imread(img_name)[:, :, :3]
 		image_raw = scipy.misc.imresize(image_raw, (240, 320))
 		image_v = np.expand_dims((image_raw.astype('float') / 255.0) - 0.5, 0)
 
@@ -72,13 +74,10 @@ if __name__ == '__main__':
 				keypoint_coord3d_v = sess.run([scale_tf, center_tf, keypoints_scoremap_tf,\
 											keypoint_coord3d_tf], feed_dict = {image_tf: image_v})
 
-			#hand_scoremap_v = np.squeeze(hand_scoremap_v)
-			#image_crop_v = np.squeeze(image_crop_v)
 			keypoints_scoremap_v = np.squeeze(keypoints_scoremap_v)
 			keypoint_coord3d_v = np.squeeze(keypoint_coord3d_v)
 
 			# post processing
-			#image_crop_v = ((image_crop_v + 0.5) * 255).astype('uint8')
 			coord_hw_crop = detect_keypoints(np.squeeze(keypoints_scoremap_v))
 			coord_hw = trafo_coords(coord_hw_crop, center_v, scale_v, 256)
 
@@ -88,7 +87,7 @@ if __name__ == '__main__':
 			keypoint_coord3d_v = sess.run(keypoint_coord3d_tf, feed_dict = {image_tf: image_v})
 
 		fingerPoseEstimate = FingerPoseEstimate(keypoint_coord3d_v)
-		fingerPoseEstimate.calculate_positions_of_fingers(image_raw)
+		fingerPoseEstimate.calculate_positions_of_fingers()
 		obtained_positions = determine_position(fingerPoseEstimate.finger_curled, 
 											fingerPoseEstimate.finger_position, known_finger_poses,
 											args.threshold * 10)
@@ -107,3 +106,6 @@ if __name__ == '__main__':
 		file_name_comp = file_name.split('.')
 		file_save_path = os.path.join(output_path, "{}_out.png".format(file_name_comp[0]))
 		mpimg.imsave(file_save_path, image_raw)
+
+		print(obtained_positions)
+		print('{} -->  {}\n\n'.format(file_name, score_label))
