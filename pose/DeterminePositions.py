@@ -34,6 +34,12 @@ def determine_position(curled_positions, finger_positions, known_finger_poses, m
             
     return obtained_positions
 
+def get_position_name_with_pose_id(pose_id, finger_poses):
+    for finger_pose in finger_poses:
+        if finger_pose.position_id == pose_id:
+            return finger_pose.position_name
+    return None
+
 
 def create_known_finger_poses():
     known_finger_poses = []
@@ -69,6 +75,7 @@ def create_known_finger_poses():
         [1.0, 1.0], # Ring
         [1.0, 1.0]  # Little
     ]
+    simple_thumbs_up.position_id = 0
     known_finger_poses.append(simple_thumbs_up)
     
     ####### 2 Thumbs up right
@@ -102,6 +109,7 @@ def create_known_finger_poses():
         [1.0, 0.25, 0.25], # Ring
         [1.0, 0.25, 0.25]  # Little
     ]
+    thumbs_up_right.position_id = 1
     known_finger_poses.append(thumbs_up_right)
    
     ####### 3 Spock
@@ -135,6 +143,7 @@ def create_known_finger_poses():
         [1.0], # Ring
         [1.0]  # Little
     ]
+    spock.position_id = 2
     known_finger_poses.append(spock)
     
     ####### 4 I Love you
@@ -168,6 +177,7 @@ def create_known_finger_poses():
         [1.0], # Ring
         [1.0, 0.25]  # Little
     ]
+    i_love_you.position_id = 3
     known_finger_poses.append(i_love_you)
     
 
@@ -202,6 +212,7 @@ def create_known_finger_poses():
         [1.0], # Ring
         [1.0]  # Little
     ]
+    pointer.position_id = 4
     known_finger_poses.append(pointer)
     
     
@@ -236,6 +247,7 @@ def create_known_finger_poses():
         [1.0], # Ring
         [1.0]  # Little
     ]
+    ok_pos.position_id = 5
     known_finger_poses.append(ok_pos)
     
     
@@ -270,6 +282,7 @@ def create_known_finger_poses():
         [1.0], # Ring
         [1.0]  # Little
     ]
+    victory.position_id = 6
     known_finger_poses.append(victory)
     
     return known_finger_poses

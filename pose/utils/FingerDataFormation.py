@@ -5,3 +5,4 @@ class FingerDataFormation:
         self.curl_position_confidence = []
         self.finger_position_confidence = []
         self.position_name = ''
+        self.position_id = -1

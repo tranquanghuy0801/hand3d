@@ -9,6 +9,7 @@ import os
 from mpl_toolkits.mplot3d import Axes3D
 import argparse
 import cv2
+import operator
 
 from nets.ColorHandPose3DNetwork import ColorHandPose3DNetwork
 from utils.general import detect_keypoints, trafo_coords, plot_hand, plot_hand_2d, plot_hand_3d
@@ -87,17 +88,16 @@ if __name__ == '__main__':
 			keypoint_coord3d_v = sess.run(keypoint_coord3d_tf, feed_dict = {image_tf: image_v})
 
 		fingerPoseEstimate = FingerPoseEstimate(keypoint_coord3d_v)
-		fingerPoseEstimate.calculate_positions_of_fingers()
+		fingerPoseEstimate.calculate_positions_of_fingers(print_finger_info = True)
 		obtained_positions = determine_position(fingerPoseEstimate.finger_curled, 
 											fingerPoseEstimate.finger_position, known_finger_poses,
 											args.threshold * 10)
-
+		
 		score_label = 'Undefined'
-		max_score = 0.0
-		for k, v in obtained_positions.items():
-			if v > max_score:
-				max_score = v
-				score_label = '{}'.format(k)
+		if len(obtained_positions) > 0:
+			max_pose_label = max(obtained_positions.items(), key=operator.itemgetter(1))[0]
+			if obtained_positions[max_pose_label] >= threshold:
+				score_label = obtained_positions[max_pose_label]
 				
 		font = cv2.FONT_HERSHEY_SIMPLEX
 		cv2.putText(image_raw, score_label, (10, 200), font, 1.0, (255, 0, 0), 2, cv2.LINE_AA)

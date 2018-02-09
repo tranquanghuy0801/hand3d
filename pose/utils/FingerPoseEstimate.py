@@ -226,7 +226,7 @@ class FingerPoseEstimate:
         #print('Vote at {}, {}, {}'.format(vote_vertical, vote_diagonal, vote_horizontal))
         return reqd_direction
     
-    def calculate_orientation_of_fingers(self):
+    def calculate_orientation_of_fingers(self, print_finger_info):
         for finger in Finger:
             point_index_at = 0
             if finger == Finger.Thumb:
@@ -248,15 +248,16 @@ class FingerPoseEstimate:
             self.finger_curled[finger] = finger_curled
             self.finger_position[finger] = finger_position
 
-        for finger_index, curl, pos in zip(Finger, self.finger_curled, self.finger_position):
-            print('Finger: {}, Curl: {}, Orientation: {}'.format(
-                    Finger.get_finger_name(finger_index), FingerCurled.get_finger_curled_name(curl), 
-                    FingerPosition.get_finger_position_name(pos)))
+        if print_finger_info:
+            for finger_index, curl, pos in zip(Finger, self.finger_curled, self.finger_position):
+                print('Finger: {}, Curl: {}, Orientation: {}'.format(
+                        Finger.get_finger_name(finger_index), FingerCurled.get_finger_curled_name(curl), 
+                        FingerPosition.get_finger_position_name(pos)))
 
-        
-    def calculate_positions_of_fingers(self):
+
+    def calculate_positions_of_fingers(self, print_finger_info):
         self.calculate_slope_of_fingers()
-        self.calculate_orientation_of_fingers()
+        self.calculate_orientation_of_fingers(print_finger_info)
 
     
     # Private methods
