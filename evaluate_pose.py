@@ -10,6 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import argparse
 import cv2
 import operator
+import pickle
 
 from nets.ColorHandPose3DNetwork import ColorHandPose3DNetwork
 from utils.general import detect_keypoints, trafo_coords, plot_hand, plot_hand_2d, plot_hand_3d
@@ -29,6 +30,8 @@ def parse_args():
 						help = 'Solve the keypoints of Posenet by which method: (0=Geometry, 1=Neural Network, 2=SVM)')
 	parser.add_argument('--pb-file', dest = 'pb_file', type = str, default = None,
 						help = 'Path where neural network graph is kept.')
+	parser.add_argument('--svc-file', dest = 'svc_file', type = str, default = None,
+						help = 'Path where SVC pickle file is kept.')					
 	args = parser.parse_args()
 	return args
 
@@ -82,6 +85,16 @@ def predict_by_neural_network(keypoint_coord3d_v, known_finger_poses, pb_file, t
 			score_index = max_index if outputs[max_index] >= threshold else -1
 			score_label = 'Undefined' if score_index == -1 else get_position_name_with_pose_id(score_index, known_finger_poses) 
 			print(outputs)
+	return score_label
+
+def predict_by_svm(keypoint_coord3d_v, known_finger_poses, svc_file):
+	with open(svc_file, 'rb') as handle:
+		svc = pickle.load(handle)
+	
+	flat_keypoint = np.array([entry for sublist in keypoint_coord3d_v for entry in sublist])
+	flat_keypoint = np.expand_dims(flat_keypoint, axis = 0)
+	max_index = svc.predict(flat_keypoint)[0]
+	score_label = get_position_name_with_pose_id(max_index, known_finger_poses) 
 	return score_label
 
 if __name__ == '__main__':
@@ -138,7 +151,7 @@ if __name__ == '__main__':
 			score_label = predict_by_neural_network(keypoint_coord3d_v, known_finger_poses,
 													args.pb_file, args.threshold)
 		elif args.solve_by == 2:
-			pass
+			score_label = predict_by_svm(keypoint_coord3d_v, known_finger_poses, args.svc_file)
 				
 		font = cv2.FONT_HERSHEY_SIMPLEX
 		cv2.putText(image_raw, score_label, (10, 200), font, 1.0, (255, 0, 0), 2, cv2.LINE_AA)
