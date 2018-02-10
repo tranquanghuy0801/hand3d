@@ -13,7 +13,7 @@ import operator
 
 from nets.ColorHandPose3DNetwork import ColorHandPose3DNetwork
 from utils.general import detect_keypoints, trafo_coords, plot_hand, plot_hand_2d, plot_hand_3d
-from pose.DeterminePositions import create_known_finger_poses, determine_position
+from pose.DeterminePositions import create_known_finger_poses, determine_position, get_position_name_with_pose_id
 from pose.utils.FingerPoseEstimate import FingerPoseEstimate
 
 def parse_args():
@@ -21,10 +21,14 @@ def parse_args():
 	parser.add_argument('data_path', help = 'Path of folder containing images', type = str)
 	parser.add_argument('--output-path', dest = 'output_path', type = str, default = None,
 						help = 'Path of folder where to store the evaluation result')
-	parser.add_argument('--plot-fingers', dest = 'plot_fingers', help = 'Should fingers be plotted. (1 = Yes, 0 = No)', 
+	parser.add_argument('--plot-fingers', dest = 'plot_fingers', help = 'Should fingers be plotted.(1 = Yes, 0 = No)', 
 						default = 1, type = int)
 	parser.add_argument('--thresh', dest = 'threshold', help = 'Threshold of confidence level(0-1)', default = 0.45,
 	                    type = float)
+	parser.add_argument('--solve-by', dest = 'solve_by', default = 0, type = int,
+						help = 'Solve the keypoints of Posenet by which method: (0=Geometry, 1=Neural Network, 2=SVM)')
+	parser.add_argument('--pb-file', dest = 'pb_file', type = str, default = None,
+						help = 'Path where neural network graph is kept.')
 	args = parser.parse_args()
 	return args
 
@@ -39,6 +43,46 @@ def prepare_input(data_path, output_path):
 		output_path = os.path.abspath(output_path)
 
 	return data_files, output_path
+
+def predict_by_geometry(keypoint_coord3d_v, known_finger_poses, threshold):
+	fingerPoseEstimate = FingerPoseEstimate(keypoint_coord3d_v)
+	fingerPoseEstimate.calculate_positions_of_fingers(print_finger_info = True)
+	obtained_positions = determine_position(fingerPoseEstimate.finger_curled, 
+										fingerPoseEstimate.finger_position, known_finger_poses,
+										threshold * 10)
+
+	score_label = 'Undefined'
+	if len(obtained_positions) > 0:
+		max_pose_label = max(obtained_positions.items(), key=operator.itemgetter(1))[0]
+		if obtained_positions[max_pose_label] >= threshold:
+			score_label = obtained_positions[max_pose_label]
+	
+	print(obtained_positions)
+	return score_label
+
+def predict_by_neural_network(keypoint_coord3d_v, known_finger_poses, pb_file, threshold):
+	detection_graph = tf.Graph()
+	score_label = 'Undefined'
+	with detection_graph.as_default():
+		od_graph_def = tf.GraphDef()
+		with tf.gfile.GFile(pb_file, 'rb') as fid:
+			serialized_graph = fid.read()
+			od_graph_def.ParseFromString(serialized_graph)
+			tf.import_graph_def(od_graph_def, name = '')
+			
+		with tf.Session(graph = detection_graph) as sess:
+			input_tensor = detection_graph.get_tensor_by_name('input:0')
+			output_tensor = detection_graph.get_tensor_by_name('output:0')
+
+			flat_keypoint = np.array([entry for sublist in keypoint_coord3d_v for entry in sublist])
+			flat_keypoint = np.expand_dims(flat_keypoint, axis = 0)
+			outputs = sess.run(output_tensor, feed_dict = {input_tensor: flat_keypoint})[0]
+
+			max_index = np.argmax(outputs)
+			score_index = max_index if outputs[max_index] >= threshold else -1
+			score_label = 'Undefined' if score_index == -1 else get_position_name_with_pose_id(score_index, known_finger_poses) 
+			print(outputs)
+	return score_label
 
 if __name__ == '__main__':
 	args = parse_args()
@@ -87,17 +131,14 @@ if __name__ == '__main__':
 		else:
 			keypoint_coord3d_v = sess.run(keypoint_coord3d_tf, feed_dict = {image_tf: image_v})
 
-		fingerPoseEstimate = FingerPoseEstimate(keypoint_coord3d_v)
-		fingerPoseEstimate.calculate_positions_of_fingers(print_finger_info = True)
-		obtained_positions = determine_position(fingerPoseEstimate.finger_curled, 
-											fingerPoseEstimate.finger_position, known_finger_poses,
-											args.threshold * 10)
-		
-		score_label = 'Undefined'
-		if len(obtained_positions) > 0:
-			max_pose_label = max(obtained_positions.items(), key=operator.itemgetter(1))[0]
-			if obtained_positions[max_pose_label] >= threshold:
-				score_label = obtained_positions[max_pose_label]
+		# Classifying based on Geometry
+		if args.solve_by == 0:
+			score_label = predict_by_geometry(keypoint_coord3d_v, known_finger_poses, args.threshold)
+		elif args.solve_by == 1:
+			score_label = predict_by_neural_network(keypoint_coord3d_v, known_finger_poses,
+													args.pb_file, args.threshold)
+		elif args.solve_by == 2:
+			pass
 				
 		font = cv2.FONT_HERSHEY_SIMPLEX
 		cv2.putText(image_raw, score_label, (10, 200), font, 1.0, (255, 0, 0), 2, cv2.LINE_AA)
@@ -107,5 +148,4 @@ if __name__ == '__main__':
 		file_save_path = os.path.join(output_path, "{}_out.png".format(file_name_comp[0]))
 		mpimg.imsave(file_save_path, image_raw)
 
-		print(obtained_positions)
 		print('{} -->  {}\n\n'.format(file_name, score_label))
