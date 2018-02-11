@@ -19,7 +19,6 @@ from pose.utils.FingerPoseEstimate import FingerPoseEstimate
 # TODO: Check how to pass parameters through fl_image function. Remove global variables
 image_tf = None
 threshold = None
-save_video = None
 known_finger_poses = None
 network_elements = None
 output_txt_path = None
@@ -28,17 +27,16 @@ reqd_pose_name = None
 def parse_args():
 	parser = argparse.ArgumentParser(description = 'Process frames in a video of a particular pose')
 	parser.add_argument('video_path', help = 'Path of folder containing video', type = str)
+	# This part needs improvement. Currently, pose_no is position_id present in FingerDataFormation.py
 	parser.add_argument('pose_no', help = 'Pose to classify at', type = int)
 	parser.add_argument('--output-path', dest = 'output_path', type = str, default = None,
 						help = 'Path of folder where to store the text output')
 	parser.add_argument('--thresh', dest = 'threshold', help = 'Threshold of confidence level(0-1)', default = 0.45,
 	                    type = float)
-	parser.add_argument('--save-video', dest = 'save_video', type = int, default = 0,
-						help = 'Should output video be saved (1 = Yes, 0 = No)')
 	args = parser.parse_args()
 	return args
 
-def prepare_paths(video_path, output_txt_path, save_video):
+def prepare_paths(video_path, output_txt_path):
 	video_path = os.path.abspath(video_path)
 
 	if output_txt_path is None:
@@ -49,7 +47,7 @@ def prepare_paths(video_path, output_txt_path, save_video):
 			os.mkdir(output_txt_path)
 
 	file_name = os.path.basename(video_path).split('.')[0]
-	output_video_path = None if save_video == 0 else os.path.join(output_txt_path, '{}_save.mp4'.format(file_name))
+	output_video_path = os.path.join(output_txt_path, '{}_save.mp4'.format(file_name))
 	output_txt_path = os.path.join(output_txt_path, '{}.csv'.format(file_name))
 	if not os.path.exists(output_txt_path):
 		open(output_txt_path, 'w').close()
@@ -80,37 +78,32 @@ def process_video_frame(video_frame):
 	video_frame = scipy.misc.imresize(video_frame, (240, 320))
 	image_v = np.expand_dims((video_frame.astype('float') / 255.0) - 0.5, 0)
 
-	if save_video == 1:
-		keypoint_coord3d_tf, scale_tf, center_tf, keypoints_scoremap_tf = network_elements
-		keypoint_coord3d_v, scale_v, center_v, keypoints_scoremap_v = sess.run([keypoint_coord3d_tf,
-			scale_tf, center_tf, keypoints_scoremap_tf], feed_dict = {image_tf: image_v})
+	keypoint_coord3d_tf, scale_tf, center_tf, keypoints_scoremap_tf = network_elements
+	keypoint_coord3d_v, scale_v, center_v, keypoints_scoremap_v = sess.run([keypoint_coord3d_tf,
+		scale_tf, center_tf, keypoints_scoremap_tf], feed_dict = {image_tf: image_v})
 
-		keypoints_scoremap_v = np.squeeze(keypoints_scoremap_v)
-		keypoint_coord3d_v = np.squeeze(keypoint_coord3d_v)
+	keypoints_scoremap_v = np.squeeze(keypoints_scoremap_v)
+	keypoint_coord3d_v = np.squeeze(keypoint_coord3d_v)
 
-		# post processing
-		coord_hw_crop = detect_keypoints(np.squeeze(keypoints_scoremap_v))
-		coord_hw = trafo_coords(coord_hw_crop, center_v, scale_v, 256)
+	# post processing
+	coord_hw_crop = detect_keypoints(np.squeeze(keypoints_scoremap_v))
+	coord_hw = trafo_coords(coord_hw_crop, center_v, scale_v, 256)
 
-		plot_hand_2d(coord_hw, video_frame)
-	else:
-		keypoint_coord3d_tf = network_elements
-		keypoint_coord3d_v = sess.run(keypoint_coord3d_tf, feed_dict = {image_tf: image_v})
+	plot_hand_2d(coord_hw, video_frame)
 
-	score_label = process_keypoints(keypoint_coord3d_v, video_frame.shape)
-	if save_video == 1 and score_label is not None:
+	score_label = process_keypoints(keypoint_coord3d_v)
+	if score_label is not None:
 		font = cv2.FONT_HERSHEY_SIMPLEX
 		cv2.putText(video_frame, score_label, (10, 200), font, 1.0, (255, 0, 0), 2, cv2.LINE_AA)
 		
 	return video_frame
 
-def process_keypoints(keypoint_coord3d_v, video_shape):
-	# video_shape is being passed here to check if 
+def process_keypoints(keypoint_coord3d_v):
 	fingerPoseEstimate = FingerPoseEstimate(keypoint_coord3d_v)
 	fingerPoseEstimate.calculate_positions_of_fingers(print_finger_info = False)
 	obtained_positions = determine_position(fingerPoseEstimate.finger_curled, 
 										fingerPoseEstimate.finger_position, known_finger_poses,
-										threshold * 10)
+										threshold)
 
 	score_label = None
 	if len(obtained_positions) > 0:
@@ -126,21 +119,14 @@ def process_keypoints(keypoint_coord3d_v, video_shape):
 
 if __name__ == '__main__':
 	args = parse_args()
-	save_video = args.save_video
-	threshold = args.threshold
-	video_path, output_txt_path, output_video_path = prepare_paths(args.video_path, args.output_path,
-																   save_video)
+	threshold = args.threshold * 10
+	video_path, output_txt_path, output_video_path = prepare_paths(args.video_path, args.output_path)
 	known_finger_poses = create_known_finger_poses()
 	reqd_pose_name = get_position_name_with_pose_id(args.pose_no, known_finger_poses)
 								
-	if save_video:
-		sess, image_tf, keypoint_coord3d_tf, scale_tf, center_tf, keypoints_scoremap_tf = prepare_network()
-		network_elements = [keypoint_coord3d_tf, scale_tf, center_tf, keypoints_scoremap_tf]
-	else:
-		sess, image_tf, keypoint_coord3d_tf, _, _, _ = prepare_network()
-		network_elements = [keypoint_coord3d_tf]
+	sess, image_tf, keypoint_coord3d_tf, scale_tf, center_tf, keypoints_scoremap_tf = prepare_network()
+	network_elements = [keypoint_coord3d_tf, scale_tf, center_tf, keypoints_scoremap_tf]
 
 	video_clip = VideoFileClip(video_path)
 	white_clip = video_clip.fl_image(process_video_frame) #NOTE: this function expects color images!!
-	if save_video:
-		white_clip.write_videofile(output_video_path, audio=False) 
+	white_clip.write_videofile(output_video_path, audio=False) 

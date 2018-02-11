@@ -18,18 +18,21 @@ from pose.DeterminePositions import create_known_finger_poses, determine_positio
 from pose.utils.FingerPoseEstimate import FingerPoseEstimate
 
 def parse_args():
-	parser = argparse.ArgumentParser(description = 'Detect objects in the video or still images')
+	parser = argparse.ArgumentParser(description = 'Classify hand gestures from the set of images in folder')
 	parser.add_argument('data_path', help = 'Path of folder containing images', type = str)
 	parser.add_argument('--output-path', dest = 'output_path', type = str, default = None,
 						help = 'Path of folder where to store the evaluation result')
 	parser.add_argument('--plot-fingers', dest = 'plot_fingers', help = 'Should fingers be plotted.(1 = Yes, 0 = No)', 
 						default = 1, type = int)
+	# Threshold is used for confidence measurement of Geometry and Neural Network methods
 	parser.add_argument('--thresh', dest = 'threshold', help = 'Threshold of confidence level(0-1)', default = 0.45,
 	                    type = float)
 	parser.add_argument('--solve-by', dest = 'solve_by', default = 0, type = int,
-						help = 'Solve the keypoints of Posenet by which method: (0=Geometry, 1=Neural Network, 2=SVM)')
+						help = 'Solve the keypoints of Hand3d by which method: (0=Geometry, 1=Neural Network, 2=SVM)')
+	# If solving by neural network, give the path of PB file.
 	parser.add_argument('--pb-file', dest = 'pb_file', type = str, default = None,
 						help = 'Path where neural network graph is kept.')
+	# If solving by SVM, give the path of svc pickle file.
 	parser.add_argument('--svc-file', dest = 'svc_file', type = str, default = None,
 						help = 'Path where SVC pickle file is kept.')					
 	args = parser.parse_args()
@@ -40,6 +43,7 @@ def prepare_input(data_path, output_path):
 	data_files = os.listdir(data_path)
 	data_files = [os.path.join(data_path, data_file) for data_file in data_files]
 
+	# If output path is not given, output will be stored in input folder.
 	if output_path is None:
 		output_path = data_path
 	else:
@@ -58,7 +62,7 @@ def predict_by_geometry(keypoint_coord3d_v, known_finger_poses, threshold):
 	if len(obtained_positions) > 0:
 		max_pose_label = max(obtained_positions.items(), key=operator.itemgetter(1))[0]
 		if obtained_positions[max_pose_label] >= threshold:
-			score_label = obtained_positions[max_pose_label]
+			score_label = max_pose_label
 	
 	print(obtained_positions)
 	return score_label
@@ -147,9 +151,11 @@ if __name__ == '__main__':
 		# Classifying based on Geometry
 		if args.solve_by == 0:
 			score_label = predict_by_geometry(keypoint_coord3d_v, known_finger_poses, args.threshold)
+		# Classifying based on Neural networks
 		elif args.solve_by == 1:
 			score_label = predict_by_neural_network(keypoint_coord3d_v, known_finger_poses,
 													args.pb_file, args.threshold)
+		# Classifying based on SVM
 		elif args.solve_by == 2:
 			score_label = predict_by_svm(keypoint_coord3d_v, known_finger_poses, args.svc_file)
 				

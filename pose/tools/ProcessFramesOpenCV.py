@@ -1,7 +1,9 @@
 from __future__ import print_function, unicode_literals
 
-# Note: I am having certain issues with OpenCV's VideoCapture. But this
+# Note: I am having installation issues with OpenCV's VideoCapture. But this
 # code should be working.
+# If you have encountered some bug, please post it in issues and I will try to look into it.
+# Else you can look into the processing by MoviePy present in ProcessFramesMoviePy.py file.
 
 import tensorflow as tf
 import numpy as np
@@ -20,6 +22,7 @@ from pose.utils.FingerPoseEstimate import FingerPoseEstimate
 def parse_args():
 	parser = argparse.ArgumentParser(description = 'Process frames in a video of a particular pose')
 	parser.add_argument('video_path', help = 'Path of folder containing video', type = str)
+	# This part needs improvement. Currently, pose_no is position_id present in FingerDataFormation.py 
 	parser.add_argument('pose_no', help = 'Pose to classify at', type = int)
 	parser.add_argument('--output-path', dest = 'output_path', type = str, default = None,
 						help = 'Path of folder where to store the text output')
@@ -90,20 +93,20 @@ def process_video_frame(video_frame, image_tf, threshold, save_video,
 		keypoint_coord3d_tf = network_elements
 		keypoint_coord3d_v = sess.run(keypoint_coord3d_tf, feed_dict = {image_tf: image_v})
 
-	score_label = process_keypoints(keypoint_coord3d_v, reqd_pose_name)
+	score_label = process_keypoints(keypoint_coord3d_v, threshold, known_finger_poses,
+								 output_txt_path, reqd_pose_name)
 	if save_video == 1 and score_label is not None:
 		font = cv2.FONT_HERSHEY_SIMPLEX
 		cv2.putText(video_frame, score_label, (10, 200), font, 1.0, (255, 0, 0), 2, cv2.LINE_AA)
 		
 	return video_frame
 
-def process_keypoints(keypoint_coord3d_v, reqd_pose_name):
-	# video_shape is being passed here to check if 
+def process_keypoints(keypoint_coord3d_v, threshold, known_finger_poses, output_txt_path, reqd_pose_name):
 	fingerPoseEstimate = FingerPoseEstimate(keypoint_coord3d_v)
 	fingerPoseEstimate.calculate_positions_of_fingers(print_finger_info = False)
 	obtained_positions = determine_position(fingerPoseEstimate.finger_curled, 
 										fingerPoseEstimate.finger_position, known_finger_poses,
-										threshold * 10)
+										threshold)
 
 	score_label = None
 	if len(obtained_positions) > 0:
@@ -132,7 +135,6 @@ if __name__ == '__main__':
 		network_elements = [keypoint_coord3d_tf]
 		
 	video_clip = cv2.VideoCapture(video_path)
-	video_clip = cv2.VideoCapture(0)
 	if args.save_video:
 		fourcc = cv2.VideoWriter_fourcc(*'XVID')
 		video_out = cv2.VideoWriter(output_video_path, fourcc, 20.0, (640,480))
@@ -143,7 +145,7 @@ if __name__ == '__main__':
 		if not ret:
 			break
 
-		video_frame = process_video_frame(video_frame, image_tf, args.threshold, args.save_video, 
+		video_frame = process_video_frame(video_frame, image_tf, args.threshold * 10, args.save_video, 
 										  known_finger_poses, output_txt_path, reqd_pose_name, network_elements)
 		if args.save_video:
 			video_out.write(video_frame)
