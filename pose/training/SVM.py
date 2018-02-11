@@ -10,6 +10,7 @@ from ReadData import read_data_files, split_data
 
 def parse_args():
 	parser = argparse.ArgumentParser(description = 'Train SVM')
+	# You have to give individual csv files based on the order in which position id of poses are made.
 	parser.add_argument('csv_files', help = 'Comma separated list of paths of training files', type = str)
 	parser.add_argument('--output-path', dest = 'output_path', type = str, default = None,
 						help = 'Path of folder where to store the trained model')

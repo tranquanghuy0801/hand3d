@@ -14,6 +14,7 @@ N_KEYPOINTS = 63
 
 def parse_args():
 	parser = argparse.ArgumentParser(description = 'Train neural network')
+	# You have to give individual csv files based on the order in which position id of poses are made.
 	parser.add_argument('csv_files', help = 'Comma separated list of paths of training files', type = str)
 	parser.add_argument('--output-path', dest = 'output_path', type = str, default = None,
 						help = 'Path of folder where to store the trained model')
@@ -116,7 +117,7 @@ def build_and_train_network(train_data, test_data, parameters, output_at):
 		plt.plot(range(len(train_accuracies)), train_accuracies, 'b-', label = 'Train')
 		plt.plot(range(len(test_accuracies)), test_accuracies, 'r-', label = 'Test')
 		plt.savefig('{}/accuracy.png'.format(output_at))
-		
+
 def get_value_by_name(name):
     tensor = tf.get_default_graph().get_tensor_by_name('{}:0'.format(name))
     sess = tf.get_default_session()
