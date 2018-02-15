@@ -1,12 +1,12 @@
-# Hand Gesture Classification Network
+# Hand Gesture Pose Classification Network
 
-This is a network trained to classify various types of hand gesture images.
+This is a network trained to classify various types of hand gesture pose images.
 
 You can read the detailed post about the approach used in this project in my [Medium post](Add link here).
 
 The base network of this project is the forked version of [Hand3d](https://github.com/lmb-freiburg/hand3d). 
 
-The trained network at present runs for classifying 7 hand gestures. The selected hand gesture poses are Simple thumbs up, Victory, Spock, Okay, Pointing up, I love you and Thumbs up right. The evaluation of the trained network will be done on images present inside a folder. This is the result of the network shown below.
+The trained network at present runs for classifying 7 hand gesture poses. The selected hand gesture poses are Simple thumbs up, Victory, Spock, Okay, Pointing up, I love you and Thumbs up right. The evaluation of the trained network will be done on images present inside a folder. This is the result of the network shown below.
 
 ![Classified Poses](https://user-images.githubusercontent.com/13696749/36244856-0e72a27e-124e-11e8-9c06-52c04d027386.png)
 
@@ -15,9 +15,9 @@ This is an example of classification shown along side with plottings of landmark
 ![Classified Poses with Landmarks](https://user-images.githubusercontent.com/13696749/36244906-4a824134-124e-11e8-86cb-0b8494bba1b9.png)
 
 ## Instructions to run the code
-For the detailed instructions on how to run Hand3d network on its own, please go through their [ReadMe](https://github.com/lmb-freiburg/hand3d) page. To run Hand Gesture Classification, you will have to download the weights file. Download links are present in Hand3d ReadMe page.
+For the detailed instructions on how to run Hand3d network on its own, please go through their [ReadMe](https://github.com/lmb-freiburg/hand3d) page. To run Hand Gesture Pose Classification, you will have to download the weights file. Download links are present in Hand3d ReadMe page.
 
-You can run Hand Gesture Classification Network using three methodologies. 
+You can run Hand Gesture Pose Classification Network using three methodologies. 
 
 To run using geometry formed(details explained later) by fingers, run the below instruction.
 
@@ -100,7 +100,7 @@ The options required to run this code are:
 
 The above tool evaluates based on the positions mentioned in `DeterminePositions.py` file and hence, before running this tool, you have to add the required hand gestures in that file.
 
-With keypoints of Hand3d obtained in separate CSV files for each of the hand gesture, training on neural network can be done by running the below instruction as:
+With keypoints of Hand3d obtained in separate CSV files for each of the hand gesture pose, training on neural network can be done by running the below instruction as:
 
 	python pose/training/NeuralNetwork.py './pose1.csv, ./pose2.csv'
 
