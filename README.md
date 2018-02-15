@@ -2,7 +2,7 @@
 
 This is a network trained to classify various types of hand gesture pose images.
 
-You can read the detailed post about the approach used in this project in my [Medium post](Add link here).
+You can read the detailed post about the approach used in this project in my [Medium post](https://medium.com/@prasad.pai/classification-of-hand-gesture-pose-using-tensorflow-30e83064e0ed).
 
 The base network of this project is the forked version of [Hand3d](https://github.com/lmb-freiburg/hand3d). 
 
