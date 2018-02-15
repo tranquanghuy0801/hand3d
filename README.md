@@ -1,121 +1,106 @@
-# ColorHandPose3D network
+# Hand Gesture Classification Network
 
-![Teaser](teaser.png)
+This is a network trained to classify various types of hand gesture images.
 
-ColorHandPose3D is a Convolutional Neural Network estimating 3D Hand Pose from a single RGB Image. See the [project page](https://lmb.informatik.uni-freiburg.de/projects/hand3d/) for the dataset used and additional information.
+You can read the detailed post about the approach used in this project in my [Medium post](Add link here).
 
+The base network of this project is the forked version of [Hand3d](https://github.com/lmb-freiburg/hand3d). 
 
-## Usage: Forward pass
-The network ships with a minimal example, that performs a forward pass and shows the predictions.
+The trained network at present runs for classifying 7 hand gestures. The selected hand gesture poses are Simple thumbs up, Victory, Spock, Okay, Pointing up, I love you and Thumbs up right. The evaluation of the trained network will be done on images present inside a folder. This is the result of the network shown below.
 
-- Download [data](https://lmb.informatik.uni-freiburg.de/projects/hand3d/ColorHandPose3D_data_v3.zip) and unzip it into the projects root folder (This will create 3 folders: "data", "results" and "weights")
-- *run.py* - Will run a forward pass of the network on the provided examples
+This is an example of classification shown along side with plottings of landmarks.
 
-You can compare your results to the content of the folder "results", which shows the predictions we get on our system.
+## Instructions to run the code
+For the detailed instructions on how to run Hand3d network on its own, please go through their [ReadMe](https://github.com/lmb-freiburg/hand3d) page. To run Hand Gesture Classification, you will have to download the weights file. Download links are present in Hand3d ReadMe page.
 
+You can run Hand Gesture Classification Network using three methodologies. 
 
-## Recommended system
-Recommended system (tested):
-- Ubuntu 16.04.2 (xenial)
-- Tensorflow 1.3.0 GPU build with CUDA 8.0.44 and CUDNN 5.1
-- Python 3.5.2
+To run using geometry formed(details explained later) by fingers, run the below instruction.
 
+		python evaluate_pose.py ./pose/test_data
 
-Python packages used by the example provided and their recommended version:
-- tensorflow==1.3.0
-- numpy==1.13.0
-- scipy==0.18.1
-- matplotlib==1.5.3
+To run using the neural network, run the below instruction.
 
-## Preprocessing for training and evaluation
-In order to use the training and evaluation scripts you need download and preprocess the datasets.
+		python evaluate_pose.py ./pose/test_data --solve-by=1 --pb-file=./pose/learned_models/graph.pb
 
-### Rendered Hand Pose Dataset (RHD)
+To run using the Support Vector Machine, run the below instruction.
 
-- Download the dataset accompanying this publication [RHD dataset v. 1.1](https://lmb.informatik.uni-freiburg.de/resources/datasets/RenderedHandposeDataset.en.html)
-- Set the variable 'path_to_db' to where the dataset is located on your machine
-- Optionally modify 'set' variable to training or evaluation
-- Run
+		python evaluate_pose.py ./pose/test_data --solve-by=2 --svc-file=./pose/learned_models/svc.pickle
 
-		python3.5 create_binary_db.py
-- This will create a binary file in *./data/bin* according to how 'set' was configured
+### Explanation of options present
+During execution of `evaluate_pose.py`, there are several [options](Set path here) available for configuration.
+- `data_path`: This is the only compulsory option. Submit your path of folder containing images which needs to be evaluated.
+- `--output-path`: Provide the path where output needs to be stored. If this option is not provided, output will be stored in input folder.
+- `--plot-fingers`: If in output you wish to plot the landmarks obtained from Hand3d, make this option as 1. Otherwise set it to 0. By default it is at 1.
+- `--solve-by`: There are three ways in which network can be evaluated. 1 (default) = Makes use of information obtained from curl and directional orientations of finger. 2 = Neural Network. 3 = Support Vector Machine.
+- `--thresh`: This option is used if you are solving by either geometrical formation(1) or neural network(2). The value in this corresponds to threshold of confidence level. Set value in range from 0 to 1. Default value is 0.45.
+- `--pb-file`: If solving by neural network, set the path of your trained frozen model in this option.
+- `--svc-file`: If solving by SVM, set path of your trained svc pickle file in this.
 
-### Stereo Tracking Benchmark Dataset (STB)
-- For eval3d_full.py it is necessary to get the dataset presented in Zhang et al., ‘3d Hand Pose Tracking and Estimation Using Stereo Matching’, 2016
-- After unzipping the dataset run
+## Creating your own hand gesture pose
+In order to create your own hand gesture pose, you will have to edit [DeterminePositions.py](Set path here) file. For each of the five fingers present in human hand, you will have to give the information on curl and directional orientation. Check this below images to understand various types of curls and directional orientations.
+================Images here
 
-		cd ./data/stb/
-		matlab -nodesktop -nosplash -r "create_db"
-- This will create the binary file *./data/stb/stb_evaluation.bin*
+Apart from the above information, you even need to give the confidence level for each of the pose and directional orientation. Set the confidence level from 0 to 1 for each of the pose and directional orientation. Lastly, you need to set a unique position_id for each of the pose. An example of one such pose is shown below:
 
+        ####### 1 Simple Thumbs up
+        simple_thumbs_up = FingerDataFormation()
+        simple_thumbs_up.position_name = 'Simple Thumbs Up'
+        simple_thumbs_up.curl_position = [
+            [FingerCurled.NoCurl],   # Thumb
+            [FingerCurled.FullCurl], # Index
+            [FingerCurled.FullCurl], # Middle
+            [FingerCurled.FullCurl], # Ring
+            [FingerCurled.FullCurl]  # Little
+        ]
+        simple_thumbs_up.curl_position_confidence = [
+            [1.0], # Thumb
+            [1.0], # Index
+            [1.0], # Middle
+            [1.0], # Ring
+            [1.0]  # Little
+        ]
+        simple_thumbs_up.finger_position = [
+            [FingerPosition.VerticalUp, FingerPosition.DiagonalUpLeft, FingerPosition.DiagonalUpRight], # Thumb
+            [FingerPosition.HorizontalLeft, FingerPosition.HorizontalRight], # Index
+            [FingerPosition.HorizontalLeft, FingerPosition.HorizontalRight], # Middle
+            [FingerPosition.HorizontalLeft, FingerPosition.HorizontalRight], # Ring
+            [FingerPosition.HorizontalLeft, FingerPosition.HorizontalRight] # Little
+        ]
+        simple_thumbs_up.finger_position_confidence = [
+            [1.0, 0.25, 0.25], # Thumb
+            [1.0, 1.0], # Index
+            [1.0, 1.0], # Middle
+            [1.0, 1.0], # Ring
+            [1.0, 1.0]  # Little
+        ]
+        simple_thumbs_up.position_id = 0
+        known_finger_poses.append(simple_thumbs_up)
 
-## Network training
-We provide scripts to train HandSegNet and PoseNet on the [Rendered Hand Pose Dataset (RHD)](https://lmb.informatik.uni-freiburg.de/resources/datasets/RenderedHandposeDataset.en.html).
-In case you want to retrain the networks on new data you can adapt the code provided to your needs.
+## Training your own network:
+### 1) Geometry (Curl and directional orientations)
+Add all your hand gesture poses in `DeterminePositions.py` file as explained in above section. The evaluation will happen based on determination of curls and directions of fingers and hence, there is no training involved in this method. 
 
-The following steps guide you through training HandSegNet and PoseNet on the Rendered Hand Pose Dataset (RHD).
+### 2) Neural Network
+If you don't have data with images of your required hand gesture pose, you can make use of the tool present in this repository. Create separate videos with individual type of poses lasting for about 10 to 12 seconds. Ensure to add small amounts of distortions in your pose. An example video has been [enclosed](Add link here). Next to process this video, I have written in OpenCV and MoviePy. However, the OpenCV method couldn't be tested by me as I am having certain installation issues, but the usage is very similar to that of MoviePy. Using MoviePy, you can run the code as:
 
-- Make sure you followed the steps in the section 'Preprocessing'
-- Start training of HandSegNet with training_handsegnet.py
-- Start training of PoseNet with training_posenet.py
-- Set USE_RETRAINED = True on line 32 in eval2d_gt_cropped.py
-- Run eval2d_gt_cropped.py to evaluate the retrained PoseNet on RHD-e
-- Set USE_RETRAINED = True on line 31 in eval2d.py
-- Run eval2d.py to evaluate the retrained HandSegNet + PoseNet on RHD-e
+		python pose/tools/ProcessFramesMoviePy.py ./pose/video/okay.mp4 5 
+The options required to run this code are:
+- `video_path`: (Required) Give the path where the video is present.
+- `pose_no`: (Required) The `position_id` you have set for the position you are evaluating in `DeterminePositions.py` file. 
+- `--output-path`: Path of folder where to store the output csv file and video containing the detected frames. Default location is the path of input video.
+- `--thresh`: Threshold of the confidence level. Default is 0.45.
+- `--save-video`: (Available in OpenCV method) Set 1 if you would like to save the output video. Default is no, set as 0.
 
-You should be able to obtain results that roughly match the following numbers we obtain with Tensorflow v1.3:
+The above tool evaluates based on the positions mentioned in `DeterminePositions.py` file and hence, before running this tool, you have to add the required hand gestures in that file.
 
-eval2d_gt_cropped.py yields:
+With keypoints of Hand3d obtained in separate CSV files for each of the hand gesture, training on neural network can be done by running the below instruction as:
 
-    Evaluation results:
-    Average mean EPE: 7.630 pixels
-    Average median EPE: 3.939 pixels
-    Area under curve: 0.771
+		python pose/training/NeuralNetwork.py './pose1.csv, ./pose2.csv'
+Take care to pass the CSV files in the order in which `position_id` has been set in `DeterminePositions.py`. I encourage you to look into various options present in [NeuralNetwork.py](Link here) file and pass accordingly to suit your training.
+ 
+### 3) Support Vector machine
+The data with keypoints of Hand3d can also be used to train a support vector classifier. Run the below instruction
 
-
-eval2d.py yields:
-
-    Evaluation results:
-    Average mean EPE: 15.469 pixels
-    Average median EPE: 4.374 pixels
-    Area under curve: 0.715
-
-Because training itself isn't a deterministic process results will differ between runs.
-Note that these results are not listed in the paper.
-
-
-
-## Evaluation
-
-There are four scripts that evaluate different parts of the architecture:
-
-1. eval2d_gt_cropped.py: Evaluates PoseNet  on 2D keypoint localization using ground truth annoation to create hand cropped images (section 6.1, Table 1 of the paper)
-2.  eval2d.py: Evaluates HandSegNet and PoseNet on 2D keypoint localization (section 6.1, Table 1 of the paper)
-3.  eval3d.py: Evaluates different approaches on lifting 2D predictions into 3D (section 6.2.1, Table 2 of the paper)
-3.  eval3d_full.py: Evaluates our full pipeline on 3D keypoint localization from RGB (section 6.2.1, Table 2 of the paper)
-
-This provides the possibility to reproduce results from the paper that are based on the RHD dataset.
-
-
-## License and Citation
-This project is licensed under the terms of the GPL v2 license. By using the software, you are agreeing to the terms of the [license agreement](https://github.com/lmb-freiburg/hand3d/blob/master/LICENSE).
-
-
-Please cite us in your publications if it helps your research:
-
-	@InProceedings{zb2017hand,
-	  author    = {Christian Zimmermann and Thomas Brox},
-	  title     = {Learning to Estimate 3D Hand Pose from Single RGB Images},
-	  booktitle    = "IEEE International Conference on Computer Vision (ICCV)",
-	  year      = {2017},
-	  note         = "https://arxiv.org/abs/1705.01389",
-	  url          = "https://lmb.informatik.uni-freiburg.de/projects/hand3d/"
-	}
-
-
-
-## Known issues
-
-- There is an issue with the results of section 6.1, Table 1 that reports performance of 2D keypoint localization on full scale images (eval2d.py). PoseNet was trained to predict the "palm center", but the evaluation script compares to the "wrist". This results into an systematic error and therefore the reported results are significantly worse than under a correct evaluation setting. Using the correct setting during evaluation improves results approximately by 2-10% (dependent on the measure).
-- The numbers reported for the "Bottleneck" approach in Table 2 of the paper are not correct. The actual result are approx. 8 % worse.
-- There is a minor issue with the first version of RHD. There was a rounding/casting problem, which led to values of the images to be off by one every now and then compared to the version used in the paper. The difference is visually not noticable and not large, but it prevents from reaching the reported numbers exactly.
+		python pose/training/NeuralNetwork.py './pose1.csv, ./pose2.csv'
+Take care to pass the CSV files in the order in which `position_id` has been set in `DeterminePositions.py`. I encourage you to look into various options present in [SVM.py](Link here) file and pass accordingly to suit your training.

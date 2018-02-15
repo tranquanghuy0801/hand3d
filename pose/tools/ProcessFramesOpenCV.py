@@ -21,7 +21,7 @@ from pose.utils.FingerPoseEstimate import FingerPoseEstimate
 
 def parse_args():
 	parser = argparse.ArgumentParser(description = 'Process frames in a video of a particular pose')
-	parser.add_argument('video_path', help = 'Path of folder containing video', type = str)
+	parser.add_argument('video_path', help = 'Path of video', type = str)
 	# This part needs improvement. Currently, pose_no is position_id present in FingerDataFormation.py 
 	parser.add_argument('pose_no', help = 'Pose to classify at', type = int)
 	parser.add_argument('--output-path', dest = 'output_path', type = str, default = None,
