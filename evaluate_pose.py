@@ -127,7 +127,10 @@ if __name__ == '__main__':
 
 	# Feed image list through network
 	for img_name in data_files:
-		image_raw = scipy.misc.imread(img_name)[:, :, :3]
+		image_raw = scipy.misc.imread(img_name)[:,:,:3]
+		image_height, image_width = image_raw.shape[:2]
+		if image_height < 240 or image_width < 320:
+			image_raw = scipy.misc.imresize(image_raw,(2 * image_height,2 * image_width))
 		image_raw = scipy.misc.imresize(image_raw, (240, 320))
 		image_v = np.expand_dims((image_raw.astype('float') / 255.0) - 0.5, 0)
 
@@ -166,5 +169,8 @@ if __name__ == '__main__':
 		file_name_comp = file_name.split('.')
 		file_save_path = os.path.join(output_path, "{}_out.png".format(file_name_comp[0]))
 		mpimg.imsave(file_save_path, image_raw)
+		label = score_label.split('-')[0]
+		if label != 'Thumbs Up':
+			label = 'Not Thumbs Up'
 
-		print('{} -->  {}\n\n'.format(file_name, score_label))
+		print('{} -->  {}\n\n'.format(file_name, label))

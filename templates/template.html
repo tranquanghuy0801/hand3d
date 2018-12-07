@@ -1,0 +1,9 @@
+{% extends "index.html" %}
+{% block content %}
+<th>
+<img width="400px" height="250px" src=" {{url_for('send_image', filename=image_name)}}" />
+</th>
+<th>
+{{label}}
+</th>
+{% endblock %}

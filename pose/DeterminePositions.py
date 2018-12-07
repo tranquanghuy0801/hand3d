@@ -43,7 +43,151 @@ def get_position_name_with_pose_id(pose_id, finger_poses):
 
 def create_known_finger_poses():
     known_finger_poses = []
+    ####### Thumps Up 
+
+    simple_thumbs_up = FingerDataFormation()
+    simple_thumbs_up.position_name = 'Thumbs Up-Straight'
+    simple_thumbs_up.curl_position = [
+        [FingerCurled.NoCurl],   # Thumb
+        [FingerCurled.FullCurl], # Index
+        [FingerCurled.FullCurl], # Middle
+        [FingerCurled.FullCurl], # Ring
+        [FingerCurled.FullCurl]  # Little
+    ]
+    simple_thumbs_up.curl_position_confidence = [
+        [1.0], # Thumb
+        [1.0], # Index
+        [1.0], # Middle
+        [1.0], # Ring
+        [1.0]  # Little
+    ]
+    simple_thumbs_up.finger_position = [
+        [FingerPosition.VerticalUp, FingerPosition.DiagonalUpLeft, FingerPosition.DiagonalUpRight], # Thumb
+        [FingerPosition.HorizontalLeft, FingerPosition.HorizontalRight], # Index
+        [FingerPosition.HorizontalLeft, FingerPosition.HorizontalRight], # Middle
+        [FingerPosition.HorizontalLeft, FingerPosition.HorizontalRight], # Ring
+        [FingerPosition.HorizontalLeft, FingerPosition.HorizontalRight] # Little
+    ]
+    simple_thumbs_up.finger_position_confidence = [
+        [1.0, 0.25, 0.25], # Thumb
+        [1.0, 1.0], # Index
+        [1.0, 1.0], # Middle
+        [1.0, 1.0], # Ring
+        [1.0, 1.0]  # Little
+    ]
+    simple_thumbs_up.position_id = 0
+    known_finger_poses.append(simple_thumbs_up)
     
+
+    ####### 2 Thumbs up right
+    thumbs_up_right = FingerDataFormation()
+    thumbs_up_right.position_name = 'Thumbs Up-Right'
+    thumbs_up_right.curl_position = [
+        [FingerCurled.NoCurl],   # Thumb
+        [FingerCurled.FullCurl, FingerCurled.HalfCurl], # Index
+        [FingerCurled.FullCurl, FingerCurled.HalfCurl], # Middle
+        [FingerCurled.FullCurl, FingerCurled.HalfCurl], # Ring
+        [FingerCurled.FullCurl, FingerCurled.HalfCurl]  # Little
+    ]
+    thumbs_up_right.curl_position_confidence = [
+        [1.0, 0.5], # Thumb
+        [1.0, 0.5], # Index
+        [1.0, 0.5], # Middle
+        [1.0, 0.5], # Ring
+        [1.0, 0.5]  # Little
+    ]
+    thumbs_up_right.finger_position = [
+        [FingerPosition.HorizontalLeft, FingerPosition.DiagonalUpLeft, FingerPosition.DiagonalDownLeft], # Thumb
+        [FingerPosition.VerticalUp, FingerPosition.DiagonalUpRight, FingerPosition.DiagonalUpLeft], # Index
+        [FingerPosition.VerticalUp, FingerPosition.DiagonalUpRight, FingerPosition.DiagonalUpLeft], # Middle
+        [FingerPosition.VerticalUp, FingerPosition.DiagonalUpRight, FingerPosition.DiagonalUpLeft], # Ring
+        [FingerPosition.VerticalUp, FingerPosition.DiagonalUpRight, FingerPosition.DiagonalUpLeft] # Little
+    ]
+    thumbs_up_right.finger_position_confidence = [
+        [1.0, 0.5, 0.5], # Thumb
+        [1.0, 0.5, 0.5], # Index
+        [1.0, 0.5, 0.5], # Middle
+        [1.0, 0.5, 0.5], # Ring
+        [1.0, 0.5, 0.5]  # Little
+    ]
+    thumbs_up_right.position_id = 1
+    known_finger_poses.append(thumbs_up_right)
+
+
+    pointer = FingerDataFormation()
+    pointer.position_name = 'Pointing Up'
+    pointer.curl_position = [
+        [FingerCurled.NoCurl],   # Thumb
+        [FingerCurled.NoCurl], # Index
+        [FingerCurled.FullCurl], # Middle
+        [FingerCurled.FullCurl], # Ring
+        [FingerCurled.FullCurl]  # Little
+    ]
+    pointer.curl_position_confidence = [
+        [1.0], # Thumb
+        [1.0], # Index
+        [1.0], # Middle
+        [1.0], # Ring
+        [1.0]  # Little
+    ]
+    pointer.finger_position = [
+        [FingerPosition.VerticalUp, FingerPosition.DiagonalUpLeft], # Thumb
+        [FingerPosition.VerticalUp, FingerPosition.DiagonalUpLeft], # Index
+        [FingerPosition.VerticalUp], # Middle
+        [FingerPosition.VerticalUp], # Ring
+        [FingerPosition.VerticalUp] # Little
+    ]
+    pointer.finger_position_confidence = [
+        [1.0, 0.5], # Thumb
+        [1.0, 0.3], # Index
+        [1.0], # Middle
+        [1.0], # Ring
+        [1.0]  # Little
+    ]
+    pointer.position_id = 2
+    known_finger_poses.append(pointer)
+    
+
+    '''
+
+    ####### 2 Thumbs up left
+    thumbs_up_left = FingerDataFormation()
+    thumbs_up_left.position_name = 'Thumbs Up-Left'
+    thumbs_up_left.curl_position = [
+        [FingerCurled.NoCurl],   # Thumb
+        [FingerCurled.FullCurl, FingerCurled.HalfCurl], # Index
+        [FingerCurled.FullCurl, FingerCurled.HalfCurl], # Middle
+        [FingerCurled.FullCurl, FingerCurled.HalfCurl], # Ring
+        [FingerCurled.FullCurl, FingerCurled.HalfCurl]  # Little
+    ]
+    thumbs_up_left.curl_position_confidence = [
+        [1.0, 0.5], # Thumb
+        [1.0, 0.5], # Index
+        [1.0, 0.5], # Middle
+        [1.0, 0.5], # Ring
+        [1.0, 0.5]  # Little
+    ]
+    thumbs_up_left.finger_position = [
+        [FingerPosition.HorizontalRight, FingerPosition.DiagonalUpRight, FingerPosition.DiagonalDownRight], # Thumb
+        [FingerPosition.VerticalDown, FingerPosition.DiagonalUpRight, FingerPosition.DiagonalUpLeft], # Index
+        [FingerPosition.VerticalDown, FingerPosition.DiagonalUpRight, FingerPosition.DiagonalUpLeft], # Middle
+        [FingerPosition.VerticalDown, FingerPosition.DiagonalUpRight, FingerPosition.DiagonalUpLeft], # Ring
+        [FingerPosition.VerticalDown, FingerPosition.DiagonalUpRight, FingerPosition.DiagonalUpLeft] # Little
+    ]
+    thumbs_up_left.finger_position_confidence = [
+        [1.0, 0.25, 0.25], # Thumb
+        [1.0, 0.25, 0.25], # Index
+        [1.0, 0.25, 0.25], # Middle
+        [1.0, 0.25, 0.25], # Ring
+        [1.0, 0.25, 0.25]  # Little
+    ]
+    thumbs_up_left.position_id = 2
+    known_finger_poses.append(thumbs_up_left)
+    '''
+
+
+
+    '''
     ####### 1 Simple Thumbs up
     simple_thumbs_up = FingerDataFormation()
     simple_thumbs_up.position_name = 'Simple Thumbs Up'
@@ -284,5 +428,6 @@ def create_known_finger_poses():
     ]
     victory.position_id = 6
     known_finger_poses.append(victory)
+    '''
     
     return known_finger_poses
