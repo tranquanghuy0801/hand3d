@@ -9,8 +9,6 @@ click==6.7
 click-plugins==1.0.4
 cligj==0.5.0
 cycler==0.10.0
-Cython==0.29.1
-darkflow==1.0.0
 decorator==4.3.0
 descartes==1.1.0
 entrypoints==0.2.3
@@ -18,14 +16,10 @@ Fiona==1.7.13
 Flask==0.12.2
 Flask-API==1.0
 gast==0.2.0
-GDAL==2.2.4
 geopandas==0.4.0
 grpcio==1.16.0
 h5py==2.8.0
-ipykernel==5.1.0
-ipython==7.2.0
 ipython-genutils==0.2.0
-itsdangerous==0.24
 jedi==0.13.1
 Jinja2==2.9.6
 jsonschema==3.0.0a3
@@ -38,7 +32,7 @@ kiwisolver==1.0.1
 lightgbm==2.2.2
 Markdown==3.0.1
 MarkupSafe==1.0
-matplotlib==3.0.2
+matplotlib==2.2.3
 mistune==0.8.4
 mkl-fft==1.0.6
 mkl-random==1.0.1
