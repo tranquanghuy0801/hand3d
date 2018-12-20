@@ -19,6 +19,7 @@ from __future__ import print_function, unicode_literals
 
 import tensorflow as tf
 import os
+import _pickle as cPickle
 
 from utils.general import *
 
@@ -51,7 +52,7 @@ class ColorHandPose3DNetwork(object):
         for file_name in weight_files:
             assert os.path.exists(file_name), "File not found."
             with open(file_name, 'rb') as fi:
-                weight_dict = pickle.load(fi)
+                weight_dict = cPickle.load(fi)
                 weight_dict = {k: v for k, v in weight_dict.items() if not any([x in k for x in exclude_var_list])}
                 if len(weight_dict) > 0:
                     init_op, init_feed = tf.contrib.framework.assign_from_values(weight_dict)

@@ -35,7 +35,7 @@ class NetworkOps(object):
 
     @classmethod
     def conv(cls, in_tensor, layer_name, kernel_size, stride, out_chan, trainable=True):
-        with tf.variable_scope(layer_name):
+        with tf.variable_scope(layer_name,reuse=tf.AUTO_REUSE):
             in_size = in_tensor.get_shape().as_list()
 
             strides = [1, stride, stride, 1]
@@ -67,7 +67,7 @@ class NetworkOps(object):
 
     @classmethod
     def upconv(cls, in_tensor, layer_name, output_shape, kernel_size, stride, trainable=True):
-        with tf.variable_scope(layer_name):
+        with tf.variable_scope(layer_name,reuse=tf.AUTO_REUSE):
             in_size = in_tensor.get_shape().as_list()
 
             kernel_shape = [kernel_size, kernel_size, in_size[3], in_size[3]]
@@ -112,7 +112,7 @@ class NetworkOps(object):
 
     @staticmethod
     def fully_connected(in_tensor, layer_name, out_chan, trainable=True):
-        with tf.variable_scope(layer_name):
+        with tf.variable_scope(layer_name,reuse=tf.AUTO_REUSE):
             in_size = in_tensor.get_shape().as_list()
             assert len(in_size) == 2, 'Input to a fully connected layer must be a vector.'
             weights_shape = [in_size[1], out_chan]
@@ -139,7 +139,7 @@ class NetworkOps(object):
     @staticmethod
     def dropout(in_tensor, keep_prob, evaluation):
         """ Dropout: Each neuron is dropped independently. """
-        with tf.variable_scope('dropout'):
+        with tf.variable_scope('dropout',reuse=tf.AUTO_REUSE):
             tensor_shape = in_tensor.get_shape().as_list()
             out_tensor = tf.cond(evaluation,
                                  lambda: tf.nn.dropout(in_tensor, 1.0,
@@ -151,7 +151,7 @@ class NetworkOps(object):
     @staticmethod
     def spatial_dropout(in_tensor, keep_prob, evaluation):
         """ Spatial dropout: Not each neuron is dropped independently, but feature map wise. """
-        with tf.variable_scope('spatial_dropout'):
+        with tf.variable_scope('spatial_dropout',reuse=tf.AUTO_REUSE):
             tensor_shape = in_tensor.get_shape().as_list()
             out_tensor = tf.cond(evaluation,
                                  lambda: tf.nn.dropout(in_tensor, 1.0,
@@ -199,7 +199,7 @@ def crop_image_from_xy(image, crop_location, crop_size, scale=1.0):
 
 def find_max_location(scoremap):
     """ Returns the coordinates of the given scoremap with maximum value. """
-    with tf.variable_scope('find_max_location'):
+    with tf.variable_scope('find_max_location',reuse=tf.AUTO_REUSE):
         s = scoremap.get_shape().as_list()
         if len(s) == 4:
             scoremap = tf.squeeze(scoremap, [3])
@@ -233,7 +233,7 @@ def find_max_location(scoremap):
 
 def single_obj_scoremap(scoremap):
     """ Applies my algorithm to figure out the most likely object from a given segmentation scoremap. """
-    with tf.variable_scope('single_obj_scoremap'):
+    with tf.variable_scope('single_obj_scoremap',reuse=tf.AUTO_REUSE):
         filter_size = 21
         s = scoremap.get_shape().as_list()
         assert len(s) == 4, "Scoremap must be 4D."
@@ -271,7 +271,7 @@ def single_obj_scoremap(scoremap):
 
 def calc_center_bb(binary_class_mask):
     """ Returns the center of mass coordinates for the given binary_class_mask. """
-    with tf.variable_scope('calc_center_bb'):
+    with tf.variable_scope('calc_center_bb',reuse=tf.AUTO_REUSE):
         binary_class_mask = tf.cast(binary_class_mask, tf.int32)
         binary_class_mask = tf.equal(binary_class_mask, 1)
         s = binary_class_mask.get_shape().as_list()

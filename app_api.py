@@ -10,16 +10,15 @@ from mpl_toolkits.mplot3d import Axes3D
 import argparse
 import operator
 import pickle
-import time
+import io
+from PIL import Image
 from nets.ColorHandPose3DNetwork import ColorHandPose3DNetwork
 from utils.general import detect_keypoints, trafo_coords, plot_hand, plot_hand_2d, plot_hand_3d
 from pose.DeterminePositions import create_known_finger_poses, determine_position, get_position_name_with_pose_id
 from pose.utils.FingerPoseEstimate import FingerPoseEstimate
-from flask import Flask, render_template, request, redirect, url_for
-from gevent.pywsgi import WSGIServer
+import flask
 
-
-app = Flask(__name__)
+app = flask.Flask(__name__)
 
 
 
@@ -61,7 +60,7 @@ def predict_the_label(image_path,threshold):
     net.init(sess)
 
 
-    image_raw = scipy.misc.imread(image_path)[:,:,:3]
+    image_raw = image_path[:,:,:3]
     image_height, image_width = image_raw.shape[:2]
     if image_height < 240 or image_width < 320:
             image_raw = scipy.misc.imresize(image_raw,(2 * image_height,2 * image_width))
@@ -93,38 +92,33 @@ def predict_the_label(image_path,threshold):
     
     return label,image_raw
 
-@app.route("/",methods=['GET'])
-def template_test():
-    return render_template('template.html', label='', image_name = 'teaser.png')
-
 @app.route("/predict", methods = ['GET', 'POST'])
 def upload():
-    start = time.time()
-    if request.method == 'POST':
-        f = request.files['file']
 
-        basepath = os.path.dirname(__file__)
-        file_path = os.path.join(
-            basepath, 'uploads', secure_filename(f.filename))
-        f.save(file_path)
+    data = {"success": False}
 
-        label, image_raw = predict_the_label(file_path,0.4)
-        scipy.misc.imsave('output.jpg',image_raw)
+    if flask.request.method == 'POST':
+        if flask.request.files.get("image"):
+            image = flask.request.files["image"].read()
+            image = Image.open(io.BytesIO(image)).convert('RGB')
+            image = np.asarray(image)
+
+
+            label, image_raw = predict_the_label(image,0.45)
+
+            data["predictions"] = []
+
+            r = {"label": label,"image": image_raw}
+
+            data["predictions"].append(r)
+            data["success"] =  True
+
     
-    # return send_from_directory("images", filename, as_attachment=True)
-    end = time.time()
-    print(end-start)
-    return render_template('template.html',label = label,image_name='output.jpg')
+    return flask.jsonify(data)
 
-    # return send_from_directory("images", filename, as_attachment=True)
-from flask import send_from_directory
-
-@app.route('/upload/<filename>')
-def send_image(filename):
-    return send_from_directory("images", filename)
 
 
 if __name__ == "__main__":
-    print("Server is running at port 5000")
-    http_server = WSGIServer(('', 5000), app)
-    http_server.serve_forever()
+    print(("* Loading Keras model and Flask starting server..."
+        "please wait until server has fully started"))
+    app.run()
